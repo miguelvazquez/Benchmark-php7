@@ -96,7 +96,7 @@ class Benchmark_Timer extends PEAR
      *
      * @access public
      */
-    function Benchmark_Timer($auto = false) 
+    function __construct($auto = false) 
     {
         $this->auto = $auto;
 
@@ -251,7 +251,7 @@ class Benchmark_Timer extends PEAR
      * @see    getProfiling()
      * @access public
      */
-    function getOutput($showTotal = false, $format = 'auto') 
+    function getOutput($showTotal = false, $format = 'auto', $decimals = 0) 
     {
         if ($format == 'auto') {
             if (function_exists('version_compare') &&
@@ -270,15 +270,15 @@ class Benchmark_Timer extends PEAR
         $dashes = '';
 
         if ($format == 'html') {
-            $out  = '<table border="1">'."\n";
+            $out  = '<table border="1" cellspacing="0" cellpadding="2">'."\n";
             $out .= '<tr>';
             $out .= '<td>&nbsp;</td>';
             $out .= '<td align="center"><b>time index</b></td>';
-            $out .= '<td align="center"><b>ex time</b></td>';
+            $out .= '<td align="center"><b>diff. time</b></td>';
             $out .= '<td align="center"><b>%</b></td>';
 
             if ($showTotal) {
-                 $out .= '<td align="center"><b>elapsed</b></td>';
+                 $out .= '<td align="center"><b>elapsed time</b></td>';
                  $out .= '<td align="center"><b>%</b></td>';
             }
 
@@ -300,15 +300,27 @@ class Benchmark_Timer extends PEAR
             $tperc = (($v['total'] * 100) / $total);
 
             $percentage = number_format($perc, 2, '.', '')."%";
+            
+            $diff_time = $v['diff'];
+            $elapsed_time = $v['total'];
+            $total_time = $total;
+
+           
+            if ($decimals>0)
+            {
+                if (!is_string($v['diff'])) $diff_time = number_format($v['diff'], $decimals, '.', '');
+                if (!is_string($v['total'])) $elapsed_time = number_format($v['total'], $decimals, '.', '');
+                if (!is_string($total)) $total_time = number_format($total, $decimals, '.', '');
+            }
 
             if ($format == 'html') {
                 $out .= "<tr><td><b>" . $v['name'] .
                        "</b></td><td>" . $v['time'] .
-                       "</td><td>" . $v['diff'] .
+                       "</td><td>" . $diff_time .
                        "</td><td align=\"right\">" . $percentage .
                        "</td>".
                        ($showTotal ?
-                            "<td>" . $v['total'] .
+                            "<td>" . $elapsed_time .
                             "</td><td align=\"right\">" .
                             number_format($tperc, 2, '.', '') .
                             "%</td>" : '').
@@ -318,11 +330,11 @@ class Benchmark_Timer extends PEAR
 
                 $out .= str_pad($v['name'], $this->maxStringLength, ' ') .
                         str_pad($v['time'], 22) .
-                        str_pad($v['diff'], 14) .
+                        str_pad($diff_time, 14) .
                         str_pad($percentage, 8, ' ', STR_PAD_LEFT) .
                         ($showTotal ? '   '.
-                            str_pad($v['total'], 14) .
-                            str_pad(number_format($tperc, 2, '.', '')."%",
+                            str_pad($elapsed_time, 14) .
+                            str_pad(number_format($tperc, 2, '.', '')." %",
                                              8, ' ', STR_PAD_LEFT) : '').
                         "\n";
             }
@@ -334,8 +346,8 @@ class Benchmark_Timer extends PEAR
             $out .= "<tr style='background: silver;'>";
             $out .= "<td><b>total</b></td>";
             $out .= "<td>-</td>";
-            $out .= "<td>${total}</td>";
-            $out .= "<td>100.00%</td>";
+            $out .= "<td>".$total_time."</td>";
+            $out .= "<td>100.00 %</td>";
             $out .= ($showTotal ? "<td>-</td><td>-</td>" : "");
             $out .= "</tr>\n";
             $out .= "</table>\n";
@@ -355,14 +367,15 @@ class Benchmark_Timer extends PEAR
      *
      * @param boolean $showTotal Optionnaly includes total in output, default no
      * @param string  $format    output format (auto, plain or html), default auto
+     * @param int  $decimals    number of decimals for show time values, default 10, [0 => All decimals]
      *
      * @see    getOutput()
      * @access public
      * @return void
      */
-    function display($showTotal = false, $format = 'auto') 
+    function display($showTotal = false, $format = 'auto', $decimals = 10) 
     {
-        print $this->getOutput($showTotal, $format);
+        print $this->getOutput($showTotal, $format, $decimals);
     }
 
     /**
